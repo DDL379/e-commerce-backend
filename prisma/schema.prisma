@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Product {
+  id              Int             @id @default(autoincrement())
+  name            String          @unique
+  price           Float
+  img             String?
+  category        String
+  baseIngredients Json            @default("[]")
+  isActive        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  productOptions  ProductOption[]
+}
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  tableNumber   Int
+  billNumber    Int?
+  status        OrderStatus @default(OPEN)
+  totalAmount   Float       @default(0)
+  paymentMethod String?
+  items         OrderItem[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id])
+  menuName  String
+  quantity  Int
+  price     Float
+  options   Json?
+  createdAt DateTime @default(now())
+}
+
+model ProductOption {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  choices   Json
+  label     String
+
+  isRequire Boolean @default(false)
+
+  createdAt DateTime @default(now())
+}
+
+enum OrderStatus {
+  OPEN
+  PAID
+  CANCELLED
+}
