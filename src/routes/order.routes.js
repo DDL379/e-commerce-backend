@@ -19,6 +19,7 @@ orderRouter.patch(
 );
 
 orderRouter.get("/history", orderController.getOrderHistory);
+
 orderRouter.get("/tables-status", orderController.getTablesStatus);
 
 orderRouter.patch("/item/:itemId", orderController.updateOrderItem);
