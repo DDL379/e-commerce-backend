@@ -23,7 +23,7 @@ model Product {
 
 model Order {
   id            Int         @id @default(autoincrement())
-  tableNumber   Int
+  tableNumber   String
   billNumber    Int?
   status        OrderStatus @default(OPEN)
   totalAmount   Float       @default(0)
