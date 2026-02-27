@@ -103,6 +103,19 @@ async function main() {
       ],
     },
     {
+      name: "ก๋วยเตี๋ยวต้มยำซอสแดง",
+      price: 60,
+      category: "ก๋วยเตี๋ยว",
+      baseIngredients: [
+        "เลือด",
+        "หนังหมู",
+        "ผักบุ้ง",
+        "ลูกชิ้นหมู",
+        "ลูกชิ้นหมูหนึบ",
+        "เต้าหู้หมูหนึบ",
+      ],
+    },
+    {
       name: "เกี๊ยวน้ำ/แห้ง",
       price: 60,
       category: "ก๋วยเตี๋ยว",
@@ -110,7 +123,6 @@ async function main() {
     },
   ];
 
-  // 3. วนลูปสร้าง Product พร้อม Options
   for (const p of products) {
     await prisma.product.create({
       data: {
@@ -123,7 +135,6 @@ async function main() {
     });
   }
 
-  // 4. ของกินเล่น (ไม่มี Option S/M/L)
   const snacks = [
     {
       name: "ลูกชิ้นหมูปิ้ง",
@@ -150,10 +161,22 @@ async function main() {
       baseIngredients: ["เกี๊ยว"],
     },
     {
+      name: "เกี๊ยวแผ่น",
+      price: 10,
+      category: "ของกินเล่น",
+      baseIngredients: ["เกี๊ยวแผ่น"],
+    },
+    {
       name: "ลูกชิ้นหมูหนึบ",
       price: 20,
       category: "ของกินเล่น",
       baseIngredients: ["ลูกชิ้นหมูหนึบ"],
+    },
+    {
+      name: "เต้าหู้ลูกชิ้นหมูหนึบ",
+      price: 20,
+      category: "ของกินเล่น",
+      baseIngredients: ["เต้าหู้ลูกชิ้นมูหนึบ"],
     },
   ];
 
@@ -203,6 +226,30 @@ async function main() {
       price: 25,
       category: "เครื่องดื่ม",
       baseIngredients: ["ชามะนาว"],
+    },
+    {
+      name: "โอเลี้ยง",
+      price: 20,
+      category: "เครื่องดื่ม",
+      baseIngredients: ["โอเลี้ยง"],
+    },
+    {
+      name: "เฉาก๊วย",
+      price: 20,
+      category: "เครื่องดื่ม",
+      baseIngredients: ["เฉาก๊วย"],
+    },
+    {
+      name: "อัญชันมะนาว",
+      price: 25,
+      category: "เครื่องดื่ม",
+      baseIngredients: ["อัญชันมะนาว"],
+    },
+    {
+      name: "ชาเย็น",
+      price: 30,
+      category: "เครื่องดื่ม",
+      baseIngredients: ["ชาเย็น"],
     },
   ];
 
