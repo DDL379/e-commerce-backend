@@ -10,7 +10,7 @@ export const orderSchema = {
           z.object({
             name: z.string().min(1, "ต้องมีชื่ออาหาร"),
             quantity: z.coerce.number().int().positive(),
-            price: z.coerce.number().nonnegative(),
+            price: z.coerce.number(),
 
             options: z.any().optional().default({}),
           }),
