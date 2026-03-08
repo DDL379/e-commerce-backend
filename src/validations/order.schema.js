@@ -10,7 +10,7 @@ export const orderSchema = {
           z.object({
             name: z.string().min(1, "ต้องมีชื่ออาหาร"),
             quantity: z.coerce.number().int().positive(),
-            price: z.coerce.number(),
+            price: z.coerce.number(), // ✅ ตรงนี้เราปลดล็อกให้ติดลบได้แล้วสำหรับส่วนลด
 
             options: z.any().optional().default({}),
           }),
@@ -25,11 +25,13 @@ export const orderSchema = {
       }),
     }),
     body: z.object({
-      paymentMethod: z.enum(["CASH", "TRANSFER"], {
-        error_map: () => ({
-          message: "รองรับเฉพาะ CASH หรือ TRANSFER เท่านั้น",
-        }),
-      }),
+      // ✅ เปลี่ยนจาก enum เป็น string ธรรมดา เพื่อรองรับการรับข้อความยาวๆ แบบ SPLIT_CASH=...
+      paymentMethod: z
+        .string({
+          required_error: "กรุณาระบุวิธีการชำระเงิน",
+        })
+        .min(1, "ต้องระบุวิธีการชำระเงิน"),
+
       totalAmount: z.coerce.number().nonnegative().optional(),
     }),
   }),

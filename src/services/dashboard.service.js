@@ -8,7 +8,6 @@ export const dashboardService = {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // 1. ดึงข้อมูลสรุปยอดขายและจำนวนบิลที่สำเร็จ
     const summary = await prisma.order.aggregate({
       _sum: { totalAmount: true },
       _count: { id: true },
@@ -18,7 +17,6 @@ export const dashboardService = {
       },
     });
 
-    // 2. ดึงจำนวนบิลที่ยกเลิก (Void Orders) เพื่อทำ Report
     const voidCount = await prisma.order.count({
       where: {
         status: "CANCELLED",
@@ -26,17 +24,37 @@ export const dashboardService = {
       },
     });
 
-    // 3. แยกยอดตามวิธีชำระเงิน
-    const paymentSummary = await prisma.order.groupBy({
-      by: ["paymentMethod"],
-      _sum: { totalAmount: true },
+    // ✅ ดึงข้อมูลเพื่อมาแยกคำนวณเงินสด/เงินโอน (ดึงแค่ paymentMethod กับยอดรวมพอ)
+    const paidOrders = await prisma.order.findMany({
       where: {
         status: "PAID",
         updatedAt: { gte: startOfDay, lte: endOfDay },
       },
+      select: {
+        paymentMethod: true,
+        totalAmount: true,
+      },
     });
 
-    // 4. ดึงข้อมูลเมนูขายดี พร้อมยอดรวมเงินจริงที่ได้รับของเมนูนั้น
+    let cashTotal = 0;
+    let transferTotal = 0;
+
+    paidOrders.forEach((order) => {
+      const method = order.paymentMethod || "";
+
+      if (method.startsWith("SPLIT")) {
+        const cashMatch = method.match(/CASH=(\d+)/);
+        const transferMatch = method.match(/TRANSFER=(\d+)/);
+
+        cashTotal += cashMatch ? Number(cashMatch[1]) : 0;
+        transferTotal += transferMatch ? Number(transferMatch[1]) : 0;
+      } else if (method === "CASH") {
+        cashTotal += Number(order.totalAmount) || 0;
+      } else if (method === "TRANSFER") {
+        transferTotal += Number(order.totalAmount) || 0;
+      }
+    });
+
     const bestSellersRaw = await prisma.orderItem.groupBy({
       by: ["menuName"],
       where: {
@@ -47,12 +65,10 @@ export const dashboardService = {
       },
       _sum: {
         quantity: true,
-        price: true, // ✅ ใช้การรวมราคาจริงที่เกิดขึ้นในแต่ละบรรทัดออเดอร์
+        price: true,
       },
       orderBy: {
-        _sum: {
-          quantity: "desc",
-        },
+        _sum: { quantity: "desc" },
       },
       take: 5,
     });
@@ -60,22 +76,15 @@ export const dashboardService = {
     const bestSellers = bestSellersRaw.map((item) => ({
       menuName: item.menuName,
       totalQuantity: item._sum.quantity || 0,
-      totalAmount: Number(item._sum.price) || 0, // ✅ ได้ยอดเงินรวมที่ถูกต้องไม่ต้องไป query ซ้ำ
+      totalAmount: Number(item._sum.price) || 0,
     }));
-
-    const cashTotal =
-      paymentSummary.find((p) => p.paymentMethod === "CASH")?._sum
-        .totalAmount || 0;
-    const transferTotal =
-      paymentSummary.find((p) => p.paymentMethod === "TRANSFER")?._sum
-        .totalAmount || 0;
 
     return {
       totalRevenue: Number(summary._sum.totalAmount) || 0,
       totalOrders: summary._count.id || 0,
-      voidOrders: voidCount || 0, // ✅ เพิ่มข้อมูลบิลที่ยกเลิก
-      cashTotal: Number(cashTotal),
-      transferTotal: Number(transferTotal),
+      voidOrders: voidCount || 0,
+      cashTotal, // ยอดเงินสดเป๊ะๆ (รวมที่จ่ายแยกแล้ว)
+      transferTotal, // ยอดเงินโอนเป๊ะๆ (รวมที่จ่ายแยกแล้ว)
       bestSellers,
     };
   },
